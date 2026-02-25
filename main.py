@@ -21,10 +21,14 @@ if not TELEGRAM_TOKEN:
 if not DEEPSEEK_API_KEY:
     logger.error("⚠️ DEEPSEEK_API_KEY 没有设置")
 
-# 配置 DeepSeek 客户端
+# 打印API Key前几位（确认读取成功）
+if DEEPSEEK_API_KEY:
+    logger.info(f"✅ DeepSeek Key 已读取: {DEEPSEEK_API_KEY[:8]}...")
+
+# 配置 DeepSeek 客户端（关键！）
 client = OpenAI(
     api_key=DEEPSEEK_API_KEY,
-    base_url="https://api.deepseek.com/v1"
+    base_url="https://api.deepseek.com/v1"  # 注意必须有 /v1
 )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -34,30 +38,49 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """处理用户消息"""
     try:
+        # 获取用户消息
         user_message = update.message.text
-        logger.info(f"收到消息：{user_message}")
-
+        logger.info(f"📨 收到消息: {user_message}")
+        
+        # 发送"正在输入"状态
         await update.message.chat.send_action(action="typing")
-
+        
+        # 调用 DeepSeek API
+        logger.info("🔄 调用 DeepSeek API...")
         response = client.chat.completions.create(
             model="deepseek-chat",
-            messages=[{"role": "user", "content": user_message}]
+            messages=[
+                {"role": "system", "content": "你是一个友好的AI助手，用中文回答。"},
+                {"role": "user", "content": user_message}
+            ],
+            temperature=0.7,
+            max_tokens=2000
         )
-
+        
+        # 获取回复
         ai_reply = response.choices[0].message.content
+        logger.info(f"💬 AI回复: {ai_reply[:50]}...")
+        
+        # 发送回复
         await update.message.reply_text(ai_reply)
-
+        
     except Exception as e:
-        logger.error(f"错误：{e}")
-        await update.message.reply_text(f'❌ 出错了：{str(e)}')
+        logger.error(f"❌ 错误: {e}")
+        await update.message.reply_text(f'出错了：{str(e)}')
 
 def main():
     """主函数"""
+    logger.info("🚀 机器人启动中...")
+    
+    # 创建应用
     app = Application.builder().token(TELEGRAM_TOKEN).build()
+    
+    # 注册处理器
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
-    logger.info("✅ 机器人启动成功！")
+    # 启动机器人
+    logger.info("✅ 机器人启动成功！等待消息...")
     app.run_polling()
 
 if __name__ == '__main__':
