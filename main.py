@@ -2,7 +2,7 @@ import os
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-import openai
+from openai import OpenAI
 
 # 设置日志
 logging.basicConfig(level=logging.INFO)
@@ -10,15 +10,18 @@ logger = logging.getLogger(__name__)
 
 # 从环境变量读取密钥
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
 
-# 初始化 OpenAI
-openai.api_key = OPENAI_API_KEY
+# 配置 DeepSeek 客户端
+client = OpenAI(
+    api_key=DEEPSEEK_API_KEY,
+    base_url="https://api.deepseek.com"
+)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """处理 /start 命令"""
     await update.message.reply_text(
-        '🤖 你好！我是 AI 机器人。\n'
+        '🤖 你好！我是 AI 机器人（DeepSeek版）。\n'
         '直接发送消息给我，我就会用 AI 回复你！'
     )
 
@@ -32,15 +35,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # 发送"正在输入"状态
         await update.message.chat.send_action(action="typing")
         
-        # 调用 OpenAI API
-        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # 调用 DeepSeek API
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="deepseek-chat",
             messages=[
                 {"role": "system", "content": "你是一个友好的 AI 助手，用中文回答。"},
                 {"role": "user", "content": user_message}
             ],
-            max_tokens=1000
+            stream=False
         )
         
         # 获取并发送回复
@@ -57,8 +59,8 @@ def main():
     if not TELEGRAM_TOKEN:
         logger.error("请设置 TELEGRAM_TOKEN")
         return
-    if not OPENAI_API_KEY:
-        logger.error("请设置 OPENAI_API_KEY")
+    if not DEEPSEEK_API_KEY:
+        logger.error("请设置 DEEPSEEK_API_KEY")
         return
     
     # 创建应用
