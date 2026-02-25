@@ -17,9 +17,9 @@ DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
 
 # 检查环境变量
 if not TELEGRAM_TOKEN:
-    logger.error("❌ TELEGRAM_TOKEN 没有设置")
+    logger.error("⚠️ TELEGRAM_TOKEN 没有设置")
 if not DEEPSEEK_API_KEY:
-    logger.error("❌ DEEPSEEK_API_KEY 没有设置")
+    logger.error("⚠️ DEEPSEEK_API_KEY 没有设置")
 
 # 配置 DeepSeek 客户端
 client = OpenAI(
@@ -35,20 +35,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """处理用户消息"""
     try:
         user_message = update.message.text
-        logger.info(f"收到消息: {user_message}")
-        
+        logger.info(f"收到消息：{user_message}")
+
         await update.message.chat.send_action(action="typing")
-        
+
         response = client.chat.completions.create(
             model="deepseek-chat",
             messages=[{"role": "user", "content": user_message}]
         )
-        
+
         ai_reply = response.choices[0].message.content
         await update.message.reply_text(ai_reply)
-        
+
     except Exception as e:
-        logger.error(f"错误: {e}")
+        logger.error(f"错误：{e}")
         await update.message.reply_text(f'❌ 出错了：{str(e)}')
 
 def main():
