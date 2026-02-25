@@ -24,7 +24,7 @@ if not DEEPSEEK_API_KEY:
 # 配置 DeepSeek 客户端
 client = OpenAI(
     api_key=DEEPSEEK_API_KEY,
-    base_url="https://api.deepseek.com"
+    base_url="https://api.deepseek.com/v1"
 )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
