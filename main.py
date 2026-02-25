@@ -28,9 +28,11 @@ client = OpenAI(
 )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """处理 /start 命令"""
     await update.message.reply_text('你好！我是AI机器人（DeepSeek版）')
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """处理用户消息"""
     try:
         user_message = update.message.text
         logger.info(f"收到消息: {user_message}")
@@ -50,6 +52,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f'❌ 出错了：{str(e)}')
 
 def main():
+    """主函数"""
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
